@@ -79,6 +79,19 @@ FUNCTIONS
 
      my @some_fruit = reverse uniqby { $_->colour } reverse @fruit;
 
+  %parts = partitionby { KEYFUNC } @vals
+    Returns a hash of ARRAY refs, containing all the original values
+    distributed according to the result of the key function block. Each
+    ARRAY ref will contain all the values which returned the same string
+    from the key function, in their original order.
+
+     my %balls_by_colour = partitionby { $_->colour } @balls;
+
+    Because the values of the key function are used as hash keys, they ought
+    to either be strings, or at least well-behaved as strings (such as
+    numbers, or object references which overload stringification in a
+    suitable manner).
+
 TODO
     *   XS implementations
 

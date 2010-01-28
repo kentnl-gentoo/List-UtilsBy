@@ -1,21 +1,21 @@
 ---
-name: List-UtilsBy
-version: 0.01
+abstract: 'higher-order list utility functions'
 author:
   - 'Paul Evans <leonerd@leonerd.org.uk>'
-abstract: higher-order list utility functions
-license: perl
-resources:
-  license: http://dev.perl.org/licenses/
 build_requires:
   Test::More: 0
 configure_requires:
-  Module::Build: 0.35
-provides:
-  List::UtilsBy:
-    file: lib/List/UtilsBy.pm
-    version: 0.01
-generated_by: Module::Build version 0.35
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3601'
+license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
+name: List-UtilsBy
+provides:
+  List::UtilsBy:
+    file: lib/List/UtilsBy.pm
+    version: 0.02
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.02

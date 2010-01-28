@@ -1,16 +1,16 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2009 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2009,2010 -- leonerd@leonerd.org.uk
 
 package List::UtilsBy;
 
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
-use base qw( Exporter );
+use Exporter 'import';
 
 our @EXPORT_OK = qw(
    sortby
@@ -20,6 +20,8 @@ our @EXPORT_OK = qw(
    minby
 
    uniqby
+
+   partitionby
 );
 
 =head1 NAME
@@ -128,10 +130,10 @@ sub maxby(&@)
    local $_;
 
    my $maximal = $_ = shift @_;
-   my $max     = $code->();
+   my $max     = $code->( $_ );
 
    foreach ( @_ ) {
-      my $this = $code->();
+      my $this = $code->( $_ );
       if( $this > $max ) {
          $maximal = $_;
          $max     = $this;
@@ -157,10 +159,10 @@ sub minby(&@)
    local $_;
 
    my $minimal = $_ = shift @_;
-   my $min     = $code->();
+   my $min     = $code->( $_ );
 
    foreach ( @_ ) {
-      my $this = $code->();
+      my $this = $code->( $_ );
       if( $this < $min ) {
          $minimal = $_;
          $min     = $this;
@@ -194,6 +196,31 @@ sub uniqby(&@)
       my $key = $code->( local $_ = $_ );
       !$present{$key}++
    } @_;
+}
+
+=head2 %parts = partitionby { KEYFUNC } @vals
+
+Returns a hash of ARRAY refs, containing all the original values distributed
+according to the result of the key function block. Each ARRAY ref will contain
+all the values which returned the same string from the key function, in their
+original order.
+
+ my %balls_by_colour = partitionby { $_->colour } @balls;
+
+Because the values of the key function are used as hash keys, they ought to
+either be strings, or at least well-behaved as strings (such as numbers, or
+object references which overload stringification in a suitable manner).
+
+=cut
+
+sub partitionby(&@)
+{
+   my $code = shift;
+
+   my %parts;
+   push @{ $parts{ $code->( local $_ = $_ ) } }, $_ for @_;
+
+   return %parts;
 }
 
 # Keep perl happy; keep Britain tidy
