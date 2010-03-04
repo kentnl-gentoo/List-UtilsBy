@@ -46,9 +46,9 @@ FUNCTIONS
   @vals = nsortby { KEYFUNC } @vals
     Equivalent to "sortby" but compares its key values numerically.
 
-  $optimal = maxby { CMPFUNC } @vals
+  $optimal = maxby { KEYFUNC } @vals
     Returns the (first) value from @vals that gives the numerically largest
-    result from the comparison function.
+    result from the key function.
 
      my $tallest = maxby { $_->height } @people
 
@@ -62,9 +62,9 @@ FUNCTIONS
 
     If called on an empty list, "undef" is returned.
 
-  $optimal = minby { CMPFUNC } @vals
+  $optimal = minby { KEYFUNC } @vals
     Equivalent to "maxby" but returns the first value which gives the
-    numerically smallest result from the comparison function.
+    numerically smallest result from the key function.
 
   @vals = uniqby { KEYFUNC } @vals
     Returns a list of the subset of values for which the key function block
@@ -91,6 +91,30 @@ FUNCTIONS
     to either be strings, or at least well-behaved as strings (such as
     numbers, or object references which overload stringification in a
     suitable manner).
+
+  @values = zipby { ITEMFUNC } $arr0, $arr1, $arr2,...
+    Returns a list of each of the values returned by the function block,
+    when invoked with values from across each each of the given ARRAY
+    references. Each value in the returned list will be the result of the
+    function having been invoked with arguments at that position, from
+    across each of the arrays given.
+
+     my @transposition = zipby { [ @_ ] } @matrix;
+
+     my @names = zipby { "$_[1], $_[0]" } \@firstnames, \@surnames;
+
+     print zipby { "$_[0] => $_[1]\n" } [ keys %hash ], [ values %hash ];
+
+    If some of the arrays are shorter than others, the function will behave
+    as if they had "undef" in the trailing positions. The following two
+    lines are equivalent:
+
+     zipby { f(@_) } [ 1, 2, 3 ], [ "a", "b" ]
+     f( 1, "a" ), f( 2, "b" ), f( 3, undef )
+
+    (A function having this behaviour is sometimes called "zipWith", e.g. in
+    Haskell, but that name would not fit the naming scheme used by this
+    module).
 
 TODO
     *   XS implementations

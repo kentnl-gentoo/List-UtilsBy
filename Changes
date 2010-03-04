@@ -1,5 +1,8 @@
 Revision history for List-UtilsBy
 
+0.03    CHANGES:
+         * Added 'zipby'
+
 0.02    CHANGES:
          * Added 'partitionby'
          * import Exporter::import rather than use base'ing it

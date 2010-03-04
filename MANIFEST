@@ -13,4 +13,5 @@ t/03maxby.t
 t/04minby.t
 t/05uniqby.t
 t/06partitionby.t
+t/07zipby.t
 t/99pod.t

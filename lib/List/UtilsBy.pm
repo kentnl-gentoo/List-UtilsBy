@@ -8,7 +8,7 @@ package List::UtilsBy;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Exporter 'import';
 
@@ -22,6 +22,8 @@ our @EXPORT_OK = qw(
    uniqby
 
    partitionby
+
+   zipby
 );
 
 =head1 NAME
@@ -102,10 +104,10 @@ sub nsortby(&@)
    return map { $vals[$_] } sort { $keys[$a] <=> $keys[$b] } 0 .. $#vals;
 }
 
-=head2 $optimal = maxby { CMPFUNC } @vals
+=head2 $optimal = maxby { KEYFUNC } @vals
 
 Returns the (first) value from C<@vals> that gives the numerically largest
-result from the comparison function.
+result from the key function.
 
  my $tallest = maxby { $_->height } @people
 
@@ -143,10 +145,10 @@ sub maxby(&@)
    return $maximal;
 }
 
-=head2 $optimal = minby { CMPFUNC } @vals
+=head2 $optimal = minby { KEYFUNC } @vals
 
 Equivalent to C<maxby> but returns the first value which gives the numerically
-smallest result from the comparison function.
+smallest result from the key function.
 
 =cut
 
@@ -221,6 +223,47 @@ sub partitionby(&@)
    push @{ $parts{ $code->( local $_ = $_ ) } }, $_ for @_;
 
    return %parts;
+}
+
+=head2 @values = zipby { ITEMFUNC } $arr0, $arr1, $arr2,...
+
+Returns a list of each of the values returned by the function block, when
+invoked with values from across each each of the given ARRAY references. Each
+value in the returned list will be the result of the function having been
+invoked with arguments at that position, from across each of the arrays given.
+
+ my @transposition = zipby { [ @_ ] } @matrix;
+
+ my @names = zipby { "$_[1], $_[0]" } \@firstnames, \@surnames;
+
+ print zipby { "$_[0] => $_[1]\n" } [ keys %hash ], [ values %hash ];
+
+If some of the arrays are shorter than others, the function will behave as if
+they had C<undef> in the trailing positions. The following two lines are
+equivalent:
+
+ zipby { f(@_) } [ 1, 2, 3 ], [ "a", "b" ]
+ f( 1, "a" ), f( 2, "b" ), f( 3, undef )
+
+(A function having this behaviour is sometimes called C<zipWith>, e.g. in
+Haskell, but that name would not fit the naming scheme used by this module).
+
+=cut
+
+sub zipby(&@)
+{
+   my $code = shift;
+   my @lists = @_;
+
+   @lists or return;
+
+   my $len = 0;
+   scalar @$_ > $len and $len = scalar @$_ for @lists;
+
+   return map {
+      my $idx = $_;
+      $code->( map { $lists[$_][$idx] } 0 .. $#lists )
+   } 0 .. $len-1;
 }
 
 # Keep perl happy; keep Britain tidy
