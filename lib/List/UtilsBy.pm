@@ -8,23 +8,36 @@ package List::UtilsBy;
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use Exporter 'import';
 
 our @EXPORT_OK = qw(
-   sortby
-   nsortby
+   sort_by
+   nsort_by
 
-   maxby
-   minby
+   max_by
+   min_by
 
-   uniqby
+   uniq_by
 
-   partitionby
+   partition_by
 
-   zipby
+   zip_by
 );
+
+# Back-compat for old names of these functions.
+# We won't document it because we'll be getting rid of it sometime soon
+{
+   no strict 'refs';
+
+   foreach ( grep m/_by$/, @EXPORT_OK ) {
+      ( my $oldname = $_ ) =~ s/_by$/by/;
+
+      *$oldname = \&$_;
+      push @EXPORT_OK, $oldname;
+   }
+}
 
 =head1 NAME
 
@@ -32,12 +45,12 @@ C<List::UtilsBy> - higher-order list utility functions
 
 =head1 SYNOPSIS
 
- use List::UtilsBy qw( nsortby minby );
+ use List::UtilsBy qw( nsort_by min_by );
 
  use File::stat qw( stat );
- my @files_by_age = nsortby { stat($_)->mtime } @files;
+ my @files_by_age = nsort_by { stat($_)->mtime } @files;
 
- my $shortest_name = minby { length } @names;
+ my $shortest_name = min_by { length } @names;
 
 =head1 DESCRIPTION
 
@@ -46,12 +59,12 @@ initial code block to control their behaviour. They are variations on similar
 core perl or C<List::Util> functions of similar names, but which use the block
 to control their behaviour. For example, the core Perl function C<sort> takes
 a list of values and returns them, sorted into order by their string value.
-The C<sortby> function sorts them according to the string value returned by
+The C<sort_by> function sorts them according to the string value returned by
 the extra function, when given each value.
 
  my @names_sorted = sort @names;
 
- my @people_sorted = sortby { $_->name } @people;
+ my @people_sorted = sort_by { $_->name } @people;
 
 =cut
 
@@ -59,13 +72,13 @@ the extra function, when given each value.
 
 =cut
 
-=head2 @vals = sortby { KEYFUNC } @vals
+=head2 @vals = sort_by { KEYFUNC } @vals
 
 Returns the list of values sorted according to the string values returned by
 the C<KEYFUNC> block or function. A typical use of this may be to sort objects
 according to the string value of some accessor, such as
 
- sortby { $_->name } @people
+ sort_by { $_->name } @people
 
 The key function is called in scalar context, being passed each value in turn
 as both C<$_> and the only argument in the parameters, C<@_>. The values are
@@ -80,7 +93,7 @@ value.
 
 =cut
 
-sub sortby(&@)
+sub sort_by(&@)
 {
    my $keygen = shift;
    my @vals = @_;
@@ -89,13 +102,13 @@ sub sortby(&@)
    return map { $vals[$_] } sort { $keys[$a] cmp $keys[$b] } 0 .. $#vals;
 }
 
-=head2 @vals = nsortby { KEYFUNC } @vals
+=head2 @vals = nsort_by { KEYFUNC } @vals
 
-Equivalent to C<sortby> but compares its key values numerically.
+Equivalent to C<sort_by> but compares its key values numerically.
 
 =cut
 
-sub nsortby(&@)
+sub nsort_by(&@)
 {
    my $keygen = shift;
    my @vals = @_;
@@ -104,26 +117,26 @@ sub nsortby(&@)
    return map { $vals[$_] } sort { $keys[$a] <=> $keys[$b] } 0 .. $#vals;
 }
 
-=head2 $optimal = maxby { KEYFUNC } @vals
+=head2 $optimal = max_by { KEYFUNC } @vals
 
 Returns the (first) value from C<@vals> that gives the numerically largest
 result from the key function.
 
- my $tallest = maxby { $_->height } @people
+ my $tallest = max_by { $_->height } @people
 
  use File::stat qw( stat );
- my $newest = maxby { stat($_)->mtime } @files;
+ my $newest = max_by { stat($_)->mtime } @files;
 
 In the case of a tie, the first value to give the largest result is returned.
 To obtain the last, reverse the input list.
 
- my $longest = maxby { length $_ } reverse @strings;
+ my $longest = max_by { length $_ } reverse @strings;
 
 If called on an empty list, C<undef> is returned.
 
 =cut
 
-sub maxby(&@)
+sub max_by(&@)
 {
    my $code = shift;
 
@@ -145,14 +158,14 @@ sub maxby(&@)
    return $maximal;
 }
 
-=head2 $optimal = minby { KEYFUNC } @vals
+=head2 $optimal = min_by { KEYFUNC } @vals
 
-Equivalent to C<maxby> but returns the first value which gives the numerically
-smallest result from the key function.
+Equivalent to C<max_by> but returns the first value which gives the
+numerically smallest result from the key function.
 
 =cut
 
-sub minby(&@)
+sub min_by(&@)
 {
    my $code = shift;
 
@@ -174,22 +187,22 @@ sub minby(&@)
    return $minimal;
 }
 
-=head2 @vals = uniqby { KEYFUNC } @vals
+=head2 @vals = uniq_by { KEYFUNC } @vals
 
 Returns a list of the subset of values for which the key function block
 returns unique values. The first value yielding a particular key is chosen,
 subsequent values are rejected.
 
- my @some_fruit = uniqby { $_->colour } @fruit;
+ my @some_fruit = uniq_by { $_->colour } @fruit;
 
 To select instead the last value per key, reverse the input list. If the order
 of the results is significant, don't forget to reverse the result as well:
 
- my @some_fruit = reverse uniqby { $_->colour } reverse @fruit;
+ my @some_fruit = reverse uniq_by { $_->colour } reverse @fruit;
 
 =cut
 
-sub uniqby(&@)
+sub uniq_by(&@)
 {
    my $code = shift;
 
@@ -200,14 +213,14 @@ sub uniqby(&@)
    } @_;
 }
 
-=head2 %parts = partitionby { KEYFUNC } @vals
+=head2 %parts = partition_by { KEYFUNC } @vals
 
 Returns a hash of ARRAY refs, containing all the original values distributed
 according to the result of the key function block. Each ARRAY ref will contain
 all the values which returned the same string from the key function, in their
 original order.
 
- my %balls_by_colour = partitionby { $_->colour } @balls;
+ my %balls_by_colour = partition_by { $_->colour } @balls;
 
 Because the values of the key function are used as hash keys, they ought to
 either be strings, or at least well-behaved as strings (such as numbers, or
@@ -215,7 +228,7 @@ object references which overload stringification in a suitable manner).
 
 =cut
 
-sub partitionby(&@)
+sub partition_by(&@)
 {
    my $code = shift;
 
@@ -225,24 +238,24 @@ sub partitionby(&@)
    return %parts;
 }
 
-=head2 @values = zipby { ITEMFUNC } $arr0, $arr1, $arr2,...
+=head2 @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
 
 Returns a list of each of the values returned by the function block, when
 invoked with values from across each each of the given ARRAY references. Each
 value in the returned list will be the result of the function having been
 invoked with arguments at that position, from across each of the arrays given.
 
- my @transposition = zipby { [ @_ ] } @matrix;
+ my @transposition = zip_by { [ @_ ] } @matrix;
 
- my @names = zipby { "$_[1], $_[0]" } \@firstnames, \@surnames;
+ my @names = zip_by { "$_[1], $_[0]" } \@firstnames, \@surnames;
 
- print zipby { "$_[0] => $_[1]\n" } [ keys %hash ], [ values %hash ];
+ print zip_by { "$_[0] => $_[1]\n" } [ keys %hash ], [ values %hash ];
 
 If some of the arrays are shorter than others, the function will behave as if
 they had C<undef> in the trailing positions. The following two lines are
 equivalent:
 
- zipby { f(@_) } [ 1, 2, 3 ], [ "a", "b" ]
+ zip_by { f(@_) } [ 1, 2, 3 ], [ "a", "b" ]
  f( 1, "a" ), f( 2, "b" ), f( 3, undef )
 
 (A function having this behaviour is sometimes called C<zipWith>, e.g. in
@@ -250,7 +263,7 @@ Haskell, but that name would not fit the naming scheme used by this module).
 
 =cut
 
-sub zipby(&@)
+sub zip_by(&@)
 {
    my $code = shift;
    my @lists = @_;
@@ -278,9 +291,9 @@ sub zipby(&@)
 These functions are currently all written in pure perl. Some at least, may
 benefit from having XS implementations to speed up their logic.
 
-=item * List-context C<maxby> and C<minby>
+=item * List-context C<max_by> and C<min_by>
 
-Consider whether C<maxby> and C<minby> ought to return a list of all the
+Consider whether C<max_by> and C<min_by> ought to return a list of all the
 optimal values, in the case of a tie.
 
 =item * Merge into L<List::Util> or L<List::MoreUtils>

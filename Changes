@@ -1,5 +1,9 @@
 Revision history for List-UtilsBy
 
+0.04    CHANGES:
+         * Renamed functions sortby => sort_by, etc... Including back-compat
+           aliases by the old names
+
 0.03    CHANGES:
          * Added 'zipby'
 

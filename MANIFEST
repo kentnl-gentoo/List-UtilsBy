@@ -1,11 +1,7 @@
 Build.PL
 Changes
 lib/List/UtilsBy.pm
-LICENSE
-Makefile.PL
 MANIFEST			This list of files
-META.yml
-README
 t/00use.t
 t/01sortby.t
 t/02nsortby.t
@@ -14,4 +10,9 @@ t/04minby.t
 t/05uniqby.t
 t/06partitionby.t
 t/07zipby.t
+t/98back-compat.t
 t/99pod.t
+Makefile.PL
+README
+LICENSE
+META.yml
