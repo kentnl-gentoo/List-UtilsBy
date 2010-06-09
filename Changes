@@ -1,5 +1,8 @@
 Revision history for List-UtilsBy
 
+0.05    CHANGES:
+         * Added 'extract_by'
+
 0.04    CHANGES:
          * Renamed functions sortby => sort_by, etc... Including back-compat
            aliases by the old names

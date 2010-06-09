@@ -88,10 +88,10 @@ FUNCTIONS
 
      my %balls_by_colour = partition_by { $_->colour } @balls;
 
-    Because the values of the key function are used as hash keys, they ought
-    to either be strings, or at least well-behaved as strings (such as
-    numbers, or object references which overload stringification in a
-    suitable manner).
+    Because the values returned by the key function are used as hash keys,
+    they ought to either be strings, or at least well-behaved as strings
+    (such as numbers, or object references which overload stringification in
+    a suitable manner).
 
   @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
     Returns a list of each of the values returned by the function block,
@@ -116,6 +116,21 @@ FUNCTIONS
     (A function having this behaviour is sometimes called `zipWith', e.g. in
     Haskell, but that name would not fit the naming scheme used by this
     module).
+
+  @vals = extract_by { SELECTFUNC } @arr
+    Removes elements from the referenced array on which the selection
+    function returns true, and returns a list containing those elements.
+    This function is similar to `grep', except that it modifies the
+    referenced array to remove the selected values from it, leaving only the
+    unselected ones.
+
+     my @red_balls = extract_by { $_->color eq "red" } @balls;
+
+     # Now there are no red balls in the @balls array
+
+    This function modifies a real array, unlike most of the other functions
+    in this module. Because of this, it requires a real array, not just a
+    list.
 
 TODO
     * XS implementations

@@ -8,7 +8,7 @@ package List::UtilsBy;
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use Exporter 'import';
 
@@ -24,6 +24,8 @@ our @EXPORT_OK = qw(
    partition_by
 
    zip_by
+
+   extract_by
 );
 
 # Back-compat for old names of these functions.
@@ -222,9 +224,10 @@ original order.
 
  my %balls_by_colour = partition_by { $_->colour } @balls;
 
-Because the values of the key function are used as hash keys, they ought to
-either be strings, or at least well-behaved as strings (such as numbers, or
-object references which overload stringification in a suitable manner).
+Because the values returned by the key function are used as hash keys, they
+ought to either be strings, or at least well-behaved as strings (such as
+numbers, or object references which overload stringification in a suitable
+manner).
 
 =cut
 
@@ -277,6 +280,40 @@ sub zip_by(&@)
       my $idx = $_;
       $code->( map { $lists[$_][$idx] } 0 .. $#lists )
    } 0 .. $len-1;
+}
+
+=head2 @vals = extract_by { SELECTFUNC } @arr
+
+Removes elements from the referenced array on which the selection function
+returns true, and returns a list containing those elements. This function is
+similar to C<grep>, except that it modifies the referenced array to remove the
+selected values from it, leaving only the unselected ones.
+
+ my @red_balls = extract_by { $_->color eq "red" } @balls;
+
+ # Now there are no red balls in the @balls array
+
+This function modifies a real array, unlike most of the other functions in this
+module. Because of this, it requires a real array, not just a list.
+
+=cut
+
+sub extract_by(&\@)
+{
+   my $code = shift;
+   my ( $arrref ) = @_;
+
+   my @ret;
+   for( my $idx = 0; $idx < scalar @$arrref; ) {
+      if( $code->( local $_ = $arrref->[$idx] ) ) {
+         push @ret, splice @$arrref, $idx, 1, ();
+      }
+      else {
+         $idx++;
+      }
+   }
+
+   return @ret;
 }
 
 # Keep perl happy; keep Britain tidy
