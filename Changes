@@ -1,5 +1,10 @@
 Revision history for List-UtilsBy
 
+0.06    CHANGES:
+         * Added 'rev_sort_by' and 'rev_nsort_by'
+         * Allow 'max_by' and 'min_by' in list context to return all optimal
+         * Test and document that 'extract_by' does not break weak references
+
 0.05    CHANGES:
          * Added 'extract_by'
 

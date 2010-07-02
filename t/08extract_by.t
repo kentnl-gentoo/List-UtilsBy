@@ -2,7 +2,9 @@
 
 use strict;
 
-use Test::More tests => 8;
+use Test::More tests => 14;
+
+use Scalar::Util qw( weaken isweak );
 
 use List::UtilsBy qw( extract_by );
 
@@ -19,4 +21,18 @@ is_deeply( [ extract_by { $_[0] < 5 } @numbers ], [ 1, 2, 4 ], 'extract $_[0] < 
 is_deeply( \@numbers, [ 5, 7, 8, 10 ],                         'extract $_[0] < 4 removes from array' );
 
 is_deeply( [ extract_by { 1 } @numbers ], [ 5, 7, 8, 10 ], 'extract true returns all' );
-is_deeply( \@numbers, [],                                  'extract true leaves nothing' )
+is_deeply( \@numbers, [],                                  'extract true leaves nothing' );
+
+my @refs = map { {} } 1 .. 3;
+
+weaken $_ for my @weakrefs = @refs;
+
+is_deeply( [ extract_by { !defined $_ } @weakrefs ], [], 'extract undef refs returns nothing yet' );
+is( scalar @weakrefs, 3,                                 'extract undef refs leaves array unchanged' );
+ok( isweak $weakrefs[0], "extract_by doesn't break weakrefs" );
+
+undef $refs[0];
+
+is_deeply( [ extract_by { !defined $_ } @weakrefs ], [ undef ], 'extract undef refs yields an undef' );
+is( scalar @weakrefs, 2,                                        'extract undef refs removes from array' );
+ok( isweak $weakrefs[0], "extract_by still doesn't break weakrefs" );

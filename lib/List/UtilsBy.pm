@@ -8,13 +8,15 @@ package List::UtilsBy;
 use strict;
 use warnings;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use Exporter 'import';
 
 our @EXPORT_OK = qw(
    sort_by
    nsort_by
+   rev_sort_by
+   rev_nsort_by
 
    max_by
    min_by
@@ -98,28 +100,58 @@ value.
 sub sort_by(&@)
 {
    my $keygen = shift;
-   my @vals = @_;
 
-   my @keys = map { local $_ = $vals[$_]; scalar $keygen->( $_ ) } 0 .. $#vals;
-   return map { $vals[$_] } sort { $keys[$a] cmp $keys[$b] } 0 .. $#vals;
+   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
+   return map { $_[$_] } sort { $keys[$a] cmp $keys[$b] } 0 .. $#_;
 }
 
 =head2 @vals = nsort_by { KEYFUNC } @vals
 
-Equivalent to C<sort_by> but compares its key values numerically.
+Similar to C<sort_by> but compares its key values numerically.
 
 =cut
 
 sub nsort_by(&@)
 {
    my $keygen = shift;
-   my @vals = @_;
 
-   my @keys = map { local $_ = $vals[$_]; scalar $keygen->( $_ ) } 0 .. $#vals;
-   return map { $vals[$_] } sort { $keys[$a] <=> $keys[$b] } 0 .. $#vals;
+   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
+   return map { $_[$_] } sort { $keys[$a] <=> $keys[$b] } 0 .. $#_;
+}
+
+=head2 @vals = rev_sort_by { KEYFUNC } @vals
+
+=head2 @vals = rev_nsort_by { KEYFUNC } @vals
+
+Similar to C<sort_by> and C<nsort_by> but returns the list in the reverse
+order. Equivalent to
+
+ @vals = reverse sort_by { KEYFUNC } @vals
+
+except that these functions are slightly more efficient because they avoid
+the final C<reverse> operation.
+
+=cut
+
+sub rev_sort_by(&@)
+{
+   my $keygen = shift;
+
+   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
+   return map { $_[$_] } sort { $keys[$b] cmp $keys[$a] } 0 .. $#_;
+}
+
+sub rev_nsort_by(&@)
+{
+   my $keygen = shift;
+
+   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
+   return map { $_[$_] } sort { $keys[$b] <=> $keys[$a] } 0 .. $#_;
 }
 
 =head2 $optimal = max_by { KEYFUNC } @vals
+
+=head2 @optimal = max_by { KEYFUNC } @vals
 
 Returns the (first) value from C<@vals> that gives the numerically largest
 result from the key function.
@@ -129,12 +161,11 @@ result from the key function.
  use File::stat qw( stat );
  my $newest = max_by { stat($_)->mtime } @files;
 
-In the case of a tie, the first value to give the largest result is returned.
-To obtain the last, reverse the input list.
+In scalar context, the first maximal value is returned. In list context, a
+list of all the maximal values is returned. This may be used to obtain
+positions other than the first, if order is significant.
 
- my $longest = max_by { length $_ } reverse @strings;
-
-If called on an empty list, C<undef> is returned.
+If called on an empty list, an empty list is returned.
 
 =cut
 
@@ -142,28 +173,33 @@ sub max_by(&@)
 {
    my $code = shift;
 
-   return undef unless @_;
+   return unless @_;
 
    local $_;
 
-   my $maximal = $_ = shift @_;
+   my @maximal = $_ = shift @_;
    my $max     = $code->( $_ );
 
    foreach ( @_ ) {
       my $this = $code->( $_ );
       if( $this > $max ) {
-         $maximal = $_;
+         @maximal = $_;
          $max     = $this;
+      }
+      elsif( wantarray and $this == $max ) {
+         push @maximal, $_;
       }
    }
 
-   return $maximal;
+   return wantarray ? @maximal : $maximal[0];
 }
 
 =head2 $optimal = min_by { KEYFUNC } @vals
 
-Equivalent to C<max_by> but returns the first value which gives the
-numerically smallest result from the key function.
+=head2 @optimal = min_by { KEYFUNC } @vals
+
+Similar to C<max_by> but returns values which give the numerically smallest
+result from the key function.
 
 =cut
 
@@ -171,22 +207,25 @@ sub min_by(&@)
 {
    my $code = shift;
 
-   return undef unless @_;
+   return unless @_;
 
    local $_;
 
-   my $minimal = $_ = shift @_;
+   my @minimal = $_ = shift @_;
    my $min     = $code->( $_ );
 
    foreach ( @_ ) {
       my $this = $code->( $_ );
       if( $this < $min ) {
-         $minimal = $_;
+         @minimal = $_;
          $min     = $this;
+      }
+      elsif( wantarray and $this == $min ) {
+         push @minimal, $_;
       }
    }
 
-   return $minimal;
+   return wantarray ? @minimal : $minimal[0];
 }
 
 =head2 @vals = uniq_by { KEYFUNC } @vals
@@ -261,6 +300,13 @@ equivalent:
  zip_by { f(@_) } [ 1, 2, 3 ], [ "a", "b" ]
  f( 1, "a" ), f( 2, "b" ), f( 3, undef )
 
+The item function is called by C<map>, so if it returns a list, the entire
+list is included in the result. This can be useful for example, for generating
+a hash from two separate lists of keys and values
+
+ my %nums = zip_by { @_ } [qw( one two three )], [ 1, 2, 3 ];
+ # %nums = ( one => 1, two => 2, three => 3 )
+
 (A function having this behaviour is sometimes called C<zipWith>, e.g. in
 Haskell, but that name would not fit the naming scheme used by this module).
 
@@ -269,16 +315,15 @@ Haskell, but that name would not fit the naming scheme used by this module).
 sub zip_by(&@)
 {
    my $code = shift;
-   my @lists = @_;
 
-   @lists or return;
+   @_ or return;
 
    my $len = 0;
-   scalar @$_ > $len and $len = scalar @$_ for @lists;
+   scalar @$_ > $len and $len = scalar @$_ for @_;
 
    return map {
       my $idx = $_;
-      $code->( map { $lists[$_][$idx] } 0 .. $#lists )
+      $code->( map { $_[$_][$idx] } 0 .. $#_ )
    } 0 .. $len-1;
 }
 
@@ -295,6 +340,18 @@ selected values from it, leaving only the unselected ones.
 
 This function modifies a real array, unlike most of the other functions in this
 module. Because of this, it requires a real array, not just a list.
+
+This function is implemented by invoking C<splice()> on the array, not by
+constructing a new list and assigning it. One result of this is that weak
+references function will not be disturbed.
+
+ extract_by { !defined $_ } @refs;
+
+will leave weak references weakened in the C<@refs> array, whereas
+
+ @refs = grep { defined $_ } @refs;
+
+will strengthen them all again.
 
 =cut
 
@@ -327,11 +384,6 @@ sub extract_by(&\@)
 
 These functions are currently all written in pure perl. Some at least, may
 benefit from having XS implementations to speed up their logic.
-
-=item * List-context C<max_by> and C<min_by>
-
-Consider whether C<max_by> and C<min_by> ought to return a list of all the
-optimal values, in the case of a tie.
 
 =item * Merge into L<List::Util> or L<List::MoreUtils>
 

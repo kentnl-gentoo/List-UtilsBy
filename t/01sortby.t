@@ -2,9 +2,9 @@
 
 use strict;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
-use List::UtilsBy qw( sort_by );
+use List::UtilsBy qw( sort_by rev_sort_by );
 
 is_deeply( [ sort_by { } ], [], 'empty list' );
 
@@ -20,3 +20,5 @@ is_deeply( [ sort_by { $_[0] } "b", "a" ], [ "a", "b" ], 'identity function on $
 # list reverse on a single element is a no-op; scalar reverse will swap the
 # characters. This test also ensures the correct context is seen by the function
 is_deeply( [ sort_by { reverse $_ } "az", "by" ], [ "by", "az" ], 'reverse function' );
+
+is_deeply( [ rev_sort_by { $_ } "b", "a" ], [ "b", "a" ], 'reverse sort identity function on $_' );

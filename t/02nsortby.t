@@ -2,9 +2,9 @@
 
 use strict;
 
-use Test::More tests => 8;
+use Test::More tests => 9;
 
-use List::UtilsBy qw( nsort_by );
+use List::UtilsBy qw( nsort_by rev_nsort_by );
 
 is_deeply( [ nsort_by { } ], [], 'empty list' );
 
@@ -22,3 +22,5 @@ is_deeply( [ nsort_by { length $_ } "a", "bbb", "cc" ], [ "a", "cc", "bbb" ], 'l
 # List context would yield the matches and fail, scalar context would yield
 # the count and be correct
 is_deeply( [ nsort_by { () = m/(a)/g } "apple", "hello", "armageddon" ], [ "hello", "apple", "armageddon" ], 'scalar context' );
+
+is_deeply( [ rev_nsort_by { length $_ } "a", "bbb", "cc" ], [ "bbb", "cc", "a" ], 'reverse sort length function' );

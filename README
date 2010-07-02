@@ -1,5 +1,5 @@
 NAME
-    `List::UtilsBy' - higher-order list utility functions
+    "List::UtilsBy" - higher-order list utility functions
 
 SYNOPSIS
      use List::UtilsBy qw( nsort_by min_by );
@@ -12,10 +12,10 @@ SYNOPSIS
 DESCRIPTION
     This module provides a number of list utility functions, all of which
     take an initial code block to control their behaviour. They are
-    variations on similar core perl or `List::Util' functions of similar
+    variations on similar core perl or "List::Util" functions of similar
     names, but which use the block to control their behaviour. For example,
-    the core Perl function `sort' takes a list of values and returns them,
-    sorted into order by their string value. The `sort_by' function sorts
+    the core Perl function "sort" takes a list of values and returns them,
+    sorted into order by their string value. The "sort_by" function sorts
     them according to the string value returned by the extra function, when
     given each value.
 
@@ -26,46 +26,56 @@ DESCRIPTION
 FUNCTIONS
   @vals = sort_by { KEYFUNC } @vals
     Returns the list of values sorted according to the string values
-    returned by the `KEYFUNC' block or function. A typical use of this may
+    returned by the "KEYFUNC" block or function. A typical use of this may
     be to sort objects according to the string value of some accessor, such
     as
 
      sort_by { $_->name } @people
 
     The key function is called in scalar context, being passed each value in
-    turn as both `$_' and the only argument in the parameters, `@_'. The
-    values are then sorted according to string comparisons on the values
-    returned.
+    turn as both $_ and the only argument in the parameters, @_. The values
+    are then sorted according to string comparisons on the values returned.
 
     This is equivalent to
 
      sort { $a->name cmp $b->name } @people
 
-    except that it guarantees the `name' accessor will be executed only once
+    except that it guarantees the "name" accessor will be executed only once
     per value.
 
   @vals = nsort_by { KEYFUNC } @vals
-    Equivalent to `sort_by' but compares its key values numerically.
+    Similar to "sort_by" but compares its key values numerically.
+
+  @vals = rev_sort_by { KEYFUNC } @vals
+  @vals = rev_nsort_by { KEYFUNC } @vals
+    Similar to "sort_by" and "nsort_by" but returns the list in the reverse
+    order. Equivalent to
+
+     @vals = reverse sort_by { KEYFUNC } @vals
+
+    except that these functions are slightly more efficient because they
+    avoid the final "reverse" operation.
 
   $optimal = max_by { KEYFUNC } @vals
-    Returns the (first) value from `@vals' that gives the numerically
-    largest result from the key function.
+  @optimal = max_by { KEYFUNC } @vals
+    Returns the (first) value from @vals that gives the numerically largest
+    result from the key function.
 
      my $tallest = max_by { $_->height } @people
 
      use File::stat qw( stat );
      my $newest = max_by { stat($_)->mtime } @files;
 
-    In the case of a tie, the first value to give the largest result is
-    returned. To obtain the last, reverse the input list.
+    In scalar context, the first maximal value is returned. In list context,
+    a list of all the maximal values is returned. This may be used to obtain
+    positions other than the first, if order is significant.
 
-     my $longest = max_by { length $_ } reverse @strings;
-
-    If called on an empty list, `undef' is returned.
+    If called on an empty list, an empty list is returned.
 
   $optimal = min_by { KEYFUNC } @vals
-    Equivalent to `max_by' but returns the first value which gives the
-    numerically smallest result from the key function.
+  @optimal = min_by { KEYFUNC } @vals
+    Similar to "max_by" but returns values which give the numerically
+    smallest result from the key function.
 
   @vals = uniq_by { KEYFUNC } @vals
     Returns a list of the subset of values for which the key function block
@@ -107,20 +117,27 @@ FUNCTIONS
      print zip_by { "$_[0] => $_[1]\n" } [ keys %hash ], [ values %hash ];
 
     If some of the arrays are shorter than others, the function will behave
-    as if they had `undef' in the trailing positions. The following two
+    as if they had "undef" in the trailing positions. The following two
     lines are equivalent:
 
      zip_by { f(@_) } [ 1, 2, 3 ], [ "a", "b" ]
      f( 1, "a" ), f( 2, "b" ), f( 3, undef )
 
-    (A function having this behaviour is sometimes called `zipWith', e.g. in
+    The item function is called by "map", so if it returns a list, the
+    entire list is included in the result. This can be useful for example,
+    for generating a hash from two separate lists of keys and values
+
+     my %nums = zip_by { @_ } [qw( one two three )], [ 1, 2, 3 ];
+     # %nums = ( one => 1, two => 2, three => 3 )
+
+    (A function having this behaviour is sometimes called "zipWith", e.g. in
     Haskell, but that name would not fit the naming scheme used by this
     module).
 
   @vals = extract_by { SELECTFUNC } @arr
     Removes elements from the referenced array on which the selection
     function returns true, and returns a list containing those elements.
-    This function is similar to `grep', except that it modifies the
+    This function is similar to "grep", except that it modifies the
     referenced array to remove the selected values from it, leaving only the
     unselected ones.
 
@@ -132,17 +149,27 @@ FUNCTIONS
     in this module. Because of this, it requires a real array, not just a
     list.
 
+    This function is implemented by invoking "splice()" on the array, not by
+    constructing a new list and assigning it. One result of this is that
+    weak references function will not be disturbed.
+
+     extract_by { !defined $_ } @refs;
+
+    will leave weak references weakened in the @refs array, whereas
+
+     @refs = grep { defined $_ } @refs;
+
+    will strengthen them all again.
+
 TODO
-    * XS implementations
+    *   XS implementations
+
         These functions are currently all written in pure perl. Some at
         least, may benefit from having XS implementations to speed up their
         logic.
 
-    * List-context `max_by' and `min_by'
-        Consider whether `max_by' and `min_by' ought to return a list of all
-        the optimal values, in the case of a tie.
+    *   Merge into List::Util or List::MoreUtils
 
-    * Merge into List::Util or List::MoreUtils
         This module shouldn't really exist. The functions should instead be
         part of one of the existing modules that already contain many list
         utility functions. Having Yet Another List Utilty Module just
