@@ -103,6 +103,17 @@ FUNCTIONS
     (such as numbers, or object references which overload stringification in
     a suitable manner).
 
+  %counts = count_by { KEYFUNC } @vals
+    Returns a hash of integers, giving the number of times the key function
+    block returned a particular result, for each value in the list.
+
+     my %count_of_balls = count_by { $_->colour } @balls;
+
+    Because the values returned by the key function are used as hash keys,
+    they ought to either be strings, or at least well-behaved as strings
+    (such as numbers, or object references which overload stringification in
+    a suitable manner).
+
   @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
     Returns a list of each of the values returned by the function block,
     when invoked with values from across each each of the given ARRAY
@@ -160,6 +171,18 @@ FUNCTIONS
      @refs = grep { defined $_ } @refs;
 
     will strengthen them all again.
+
+  @vals = weighted_shuffle_by { WEIGHTFUNC } @vals
+    Returns the list of values shuffled into a random order. The
+    randomisation is not uniform, but weighted by the value returned by the
+    "WEIGHTFUNC". The probabilty of each item being returned first will be
+    distributed with the distribution of the weights, and so on recursively
+    for the remaining items.
+
+  @vals = bundle_by { BLOCKFUNC } $number, @vals
+    Similar to a regular "map" functional, returns a list of the values
+    returned by "BLOCKFUNC". Values from the input list are given to the
+    block function in bundles of $number.
 
 TODO
     *   XS implementations

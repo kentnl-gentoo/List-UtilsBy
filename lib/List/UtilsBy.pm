@@ -1,14 +1,14 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2009,2010 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2009-2011 -- leonerd@leonerd.org.uk
 
 package List::UtilsBy;
 
 use strict;
 use warnings;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use Exporter 'import';
 
@@ -24,10 +24,15 @@ our @EXPORT_OK = qw(
    uniq_by
 
    partition_by
+   count_by
 
    zip_by
 
    extract_by
+
+   weighted_shuffle_by
+
+   bundle_by
 );
 
 # Back-compat for old names of these functions.
@@ -280,6 +285,30 @@ sub partition_by(&@)
    return %parts;
 }
 
+=head2 %counts = count_by { KEYFUNC } @vals
+
+Returns a hash of integers, giving the number of times the key function block
+returned a particular result, for each value in the list.
+
+ my %count_of_balls = count_by { $_->colour } @balls;
+
+Because the values returned by the key function are used as hash keys, they
+ought to either be strings, or at least well-behaved as strings (such as
+numbers, or object references which overload stringification in a suitable
+manner).
+
+=cut
+
+sub count_by(&@)
+{
+   my $code = shift;
+
+   my %counts;
+   $counts{ $code->( local $_ = $_ ) }++ for @_;
+
+   return %counts;
+}
+
 =head2 @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
 
 Returns a list of each of the values returned by the function block, when
@@ -373,8 +402,59 @@ sub extract_by(&\@)
    return @ret;
 }
 
-# Keep perl happy; keep Britain tidy
-1;
+=head2 @vals = weighted_shuffle_by { WEIGHTFUNC } @vals
+
+Returns the list of values shuffled into a random order. The randomisation is
+not uniform, but weighted by the value returned by the C<WEIGHTFUNC>. The
+probabilty of each item being returned first will be distributed with the
+distribution of the weights, and so on recursively for the remaining items.
+
+=cut
+
+sub weighted_shuffle_by(&@)
+{
+   my $code = shift;
+   my @vals = @_;
+
+   my @weights = map { $code->( local $_ = $_ ) } @vals;
+
+   my @ret;
+   while( @vals > 1 ) {
+      my $total = 0; $total += $_ for @weights;
+      my $select = int rand $total;
+      my $idx = 0;
+      while( $select >= $weights[$idx] ) {
+         $select -= $weights[$idx++];
+      }
+
+      push @ret, splice @vals, $idx, 1, ();
+      splice @weights, $idx, 1, ();
+   }
+
+   push @ret, @vals if @vals;
+
+   return @ret;
+}
+
+=head2 @vals = bundle_by { BLOCKFUNC } $number, @vals
+
+Similar to a regular C<map> functional, returns a list of the values returned
+by C<BLOCKFUNC>. Values from the input list are given to the block function in
+bundles of C<$number>.
+
+=cut
+
+sub bundle_by(&@)
+{
+   my $code = shift;
+   my $n = shift;
+
+   my $n_1 = $n - 1;
+
+   map {
+      $code->( @_[$_*$n .. $_*$n+$n_1] )
+   } 0 .. $#_/$n;
+}
 
 =head1 TODO
 
@@ -401,3 +481,7 @@ it into an existing module.
 =head1 AUTHOR
 
 Paul Evans <leonerd@leonerd.org.uk>
+
+=cut
+
+0x55AA;

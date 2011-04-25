@@ -6,6 +6,9 @@ use Module::Build;
 my $build = Module::Build->new
   (
    module_name => 'List::UtilsBy',
+   requires => {
+      'Exporter' => '5.57',
+   },
    build_requires => {
       'Test::More' => 0,
    },

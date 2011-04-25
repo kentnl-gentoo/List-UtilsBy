@@ -1,5 +1,8 @@
 Revision history for List-UtilsBy
 
+0.07    CHANGES:
+         * Added 'count_by', 'weighted_shuffle_by', 'bundle_by'
+
 0.06    CHANGES:
          * Added 'rev_sort_by' and 'rev_nsort_by'
          * Allow 'max_by' and 'min_by' in list context to return all optimal
