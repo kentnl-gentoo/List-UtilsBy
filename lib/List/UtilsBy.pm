@@ -8,7 +8,7 @@ package List::UtilsBy;
 use strict;
 use warnings;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 use Exporter 'import';
 
@@ -34,19 +34,6 @@ our @EXPORT_OK = qw(
 
    bundle_by
 );
-
-# Back-compat for old names of these functions.
-# We won't document it because we'll be getting rid of it sometime soon
-{
-   no strict 'refs';
-
-   foreach ( grep m/_by$/, @EXPORT_OK ) {
-      ( my $oldname = $_ ) =~ s/_by$/by/;
-
-      *$oldname = \&$_;
-      push @EXPORT_OK, $oldname;
-   }
-}
 
 =head1 NAME
 
@@ -100,14 +87,23 @@ This is equivalent to
 except that it guarantees the C<name> accessor will be executed only once per
 value.
 
+One interesting use-case is to sort strings which may have numbers embedded in
+them "naturally", rather than lexically.
+
+ sort_by { s/(\d+)/sprintf "%09d", $1/eg; $_ } @strings
+
+This sorts strings by generating sort keys which zero-pad the embedded numbers
+to some level (9 digits in this case), helping to ensure the lexical sort puts
+them in the correct order.
+
 =cut
 
 sub sort_by(&@)
 {
    my $keygen = shift;
 
-   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
-   return map { $_[$_] } sort { $keys[$a] cmp $keys[$b] } 0 .. $#_;
+   my @keys = map { local $_ = $_; scalar $keygen->( $_ ) } @_;
+   return @_[ sort { $keys[$a] cmp $keys[$b] } 0 .. $#_ ];
 }
 
 =head2 @vals = nsort_by { KEYFUNC } @vals
@@ -120,8 +116,8 @@ sub nsort_by(&@)
 {
    my $keygen = shift;
 
-   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
-   return map { $_[$_] } sort { $keys[$a] <=> $keys[$b] } 0 .. $#_;
+   my @keys = map { local $_ = $_; scalar $keygen->( $_ ) } @_;
+   return @_[ sort { $keys[$a] <=> $keys[$b] } 0 .. $#_ ];
 }
 
 =head2 @vals = rev_sort_by { KEYFUNC } @vals
@@ -142,16 +138,16 @@ sub rev_sort_by(&@)
 {
    my $keygen = shift;
 
-   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
-   return map { $_[$_] } sort { $keys[$b] cmp $keys[$a] } 0 .. $#_;
+   my @keys = map { local $_ = $_; scalar $keygen->( $_ ) } @_;
+   return @_[ sort { $keys[$b] cmp $keys[$a] } 0 .. $#_ ];
 }
 
 sub rev_nsort_by(&@)
 {
    my $keygen = shift;
 
-   my @keys = map { local $_ = $_[$_]; scalar $keygen->( $_ ) } 0 .. $#_;
-   return map { $_[$_] } sort { $keys[$b] <=> $keys[$a] } 0 .. $#_;
+   my @keys = map { local $_ = $_; scalar $keygen->( $_ ) } @_;
+   return @_[ sort { $keys[$b] <=> $keys[$a] } 0 .. $#_ ];
 }
 
 =head2 $optimal = max_by { KEYFUNC } @vals
@@ -261,10 +257,10 @@ sub uniq_by(&@)
 
 =head2 %parts = partition_by { KEYFUNC } @vals
 
-Returns a hash of ARRAY refs, containing all the original values distributed
-according to the result of the key function block. Each ARRAY ref will contain
-all the values which returned the same string from the key function, in their
-original order.
+Returns a key/value list of ARRAY refs containing all the original values
+distributed according to the result of the key function block. Each value will
+be an ARRAY ref containing all the values which returned the string from the
+key function, in their original order.
 
  my %balls_by_colour = partition_by { $_->colour } @balls;
 
@@ -287,8 +283,8 @@ sub partition_by(&@)
 
 =head2 %counts = count_by { KEYFUNC } @vals
 
-Returns a hash of integers, giving the number of times the key function block
-returned a particular result, for each value in the list.
+Returns a key/value list of integers, giving the number of times the key
+function block returned the key, for each value in the list.
 
  my %count_of_balls = count_by { $_->colour } @balls;
 
@@ -372,7 +368,7 @@ module. Because of this, it requires a real array, not just a list.
 
 This function is implemented by invoking C<splice()> on the array, not by
 constructing a new list and assigning it. One result of this is that weak
-references function will not be disturbed.
+references will not be disturbed.
 
  extract_by { !defined $_ } @refs;
 
@@ -442,6 +438,9 @@ Similar to a regular C<map> functional, returns a list of the values returned
 by C<BLOCKFUNC>. Values from the input list are given to the block function in
 bundles of C<$number>.
 
+If given a list of values whose length does not evenly divide by C<$number>,
+the final call will be passed fewer elements than the others.
+
 =cut
 
 sub bundle_by(&@)
@@ -449,11 +448,12 @@ sub bundle_by(&@)
    my $code = shift;
    my $n = shift;
 
-   my $n_1 = $n - 1;
-
-   map {
-      $code->( @_[$_*$n .. $_*$n+$n_1] )
-   } 0 .. $#_/$n;
+   my @ret;
+   for( my ( $pos, $next ) = ( 0, $n ); $pos < @_; $pos = $next, $next += $n ) {
+      $next = @_ if $next > @_;
+      push @ret, $code->( @_[$pos .. $next-1] );
+   }
+   return @ret;
 }
 
 =head1 TODO

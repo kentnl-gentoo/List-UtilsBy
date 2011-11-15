@@ -1,5 +1,5 @@
 NAME
-    "List::UtilsBy" - higher-order list utility functions
+    `List::UtilsBy' - higher-order list utility functions
 
 SYNOPSIS
      use List::UtilsBy qw( nsort_by min_by );
@@ -12,10 +12,10 @@ SYNOPSIS
 DESCRIPTION
     This module provides a number of list utility functions, all of which
     take an initial code block to control their behaviour. They are
-    variations on similar core perl or "List::Util" functions of similar
+    variations on similar core perl or `List::Util' functions of similar
     names, but which use the block to control their behaviour. For example,
-    the core Perl function "sort" takes a list of values and returns them,
-    sorted into order by their string value. The "sort_by" function sorts
+    the core Perl function `sort' takes a list of values and returns them,
+    sorted into order by their string value. The `sort_by' function sorts
     them according to the string value returned by the extra function, when
     given each value.
 
@@ -26,40 +26,50 @@ DESCRIPTION
 FUNCTIONS
   @vals = sort_by { KEYFUNC } @vals
     Returns the list of values sorted according to the string values
-    returned by the "KEYFUNC" block or function. A typical use of this may
+    returned by the `KEYFUNC' block or function. A typical use of this may
     be to sort objects according to the string value of some accessor, such
     as
 
      sort_by { $_->name } @people
 
     The key function is called in scalar context, being passed each value in
-    turn as both $_ and the only argument in the parameters, @_. The values
-    are then sorted according to string comparisons on the values returned.
+    turn as both `$_' and the only argument in the parameters, `@_'. The
+    values are then sorted according to string comparisons on the values
+    returned.
 
     This is equivalent to
 
      sort { $a->name cmp $b->name } @people
 
-    except that it guarantees the "name" accessor will be executed only once
+    except that it guarantees the `name' accessor will be executed only once
     per value.
 
+    One interesting use-case is to sort strings which may have numbers
+    embedded in them "naturally", rather than lexically.
+
+     sort_by { s/(\d+)/sprintf "%09d", $1/eg; $_ } @strings
+
+    This sorts strings by generating sort keys which zero-pad the embedded
+    numbers to some level (9 digits in this case), helping to ensure the
+    lexical sort puts them in the correct order.
+
   @vals = nsort_by { KEYFUNC } @vals
-    Similar to "sort_by" but compares its key values numerically.
+    Similar to `sort_by' but compares its key values numerically.
 
   @vals = rev_sort_by { KEYFUNC } @vals
   @vals = rev_nsort_by { KEYFUNC } @vals
-    Similar to "sort_by" and "nsort_by" but returns the list in the reverse
+    Similar to `sort_by' and `nsort_by' but returns the list in the reverse
     order. Equivalent to
 
      @vals = reverse sort_by { KEYFUNC } @vals
 
     except that these functions are slightly more efficient because they
-    avoid the final "reverse" operation.
+    avoid the final `reverse' operation.
 
   $optimal = max_by { KEYFUNC } @vals
   @optimal = max_by { KEYFUNC } @vals
-    Returns the (first) value from @vals that gives the numerically largest
-    result from the key function.
+    Returns the (first) value from `@vals' that gives the numerically
+    largest result from the key function.
 
      my $tallest = max_by { $_->height } @people
 
@@ -74,7 +84,7 @@ FUNCTIONS
 
   $optimal = min_by { KEYFUNC } @vals
   @optimal = min_by { KEYFUNC } @vals
-    Similar to "max_by" but returns values which give the numerically
+    Similar to `max_by' but returns values which give the numerically
     smallest result from the key function.
 
   @vals = uniq_by { KEYFUNC } @vals
@@ -91,10 +101,10 @@ FUNCTIONS
      my @some_fruit = reverse uniq_by { $_->colour } reverse @fruit;
 
   %parts = partition_by { KEYFUNC } @vals
-    Returns a hash of ARRAY refs, containing all the original values
-    distributed according to the result of the key function block. Each
-    ARRAY ref will contain all the values which returned the same string
-    from the key function, in their original order.
+    Returns a key/value list of ARRAY refs containing all the original
+    values distributed according to the result of the key function block.
+    Each value will be an ARRAY ref containing all the values which returned
+    the string from the key function, in their original order.
 
      my %balls_by_colour = partition_by { $_->colour } @balls;
 
@@ -104,8 +114,8 @@ FUNCTIONS
     a suitable manner).
 
   %counts = count_by { KEYFUNC } @vals
-    Returns a hash of integers, giving the number of times the key function
-    block returned a particular result, for each value in the list.
+    Returns a key/value list of integers, giving the number of times the key
+    function block returned the key, for each value in the list.
 
      my %count_of_balls = count_by { $_->colour } @balls;
 
@@ -128,27 +138,27 @@ FUNCTIONS
      print zip_by { "$_[0] => $_[1]\n" } [ keys %hash ], [ values %hash ];
 
     If some of the arrays are shorter than others, the function will behave
-    as if they had "undef" in the trailing positions. The following two
+    as if they had `undef' in the trailing positions. The following two
     lines are equivalent:
 
      zip_by { f(@_) } [ 1, 2, 3 ], [ "a", "b" ]
      f( 1, "a" ), f( 2, "b" ), f( 3, undef )
 
-    The item function is called by "map", so if it returns a list, the
+    The item function is called by `map', so if it returns a list, the
     entire list is included in the result. This can be useful for example,
     for generating a hash from two separate lists of keys and values
 
      my %nums = zip_by { @_ } [qw( one two three )], [ 1, 2, 3 ];
      # %nums = ( one => 1, two => 2, three => 3 )
 
-    (A function having this behaviour is sometimes called "zipWith", e.g. in
+    (A function having this behaviour is sometimes called `zipWith', e.g. in
     Haskell, but that name would not fit the naming scheme used by this
     module).
 
   @vals = extract_by { SELECTFUNC } @arr
     Removes elements from the referenced array on which the selection
     function returns true, and returns a list containing those elements.
-    This function is similar to "grep", except that it modifies the
+    This function is similar to `grep', except that it modifies the
     referenced array to remove the selected values from it, leaving only the
     unselected ones.
 
@@ -160,13 +170,13 @@ FUNCTIONS
     in this module. Because of this, it requires a real array, not just a
     list.
 
-    This function is implemented by invoking "splice()" on the array, not by
+    This function is implemented by invoking `splice()' on the array, not by
     constructing a new list and assigning it. One result of this is that
-    weak references function will not be disturbed.
+    weak references will not be disturbed.
 
      extract_by { !defined $_ } @refs;
 
-    will leave weak references weakened in the @refs array, whereas
+    will leave weak references weakened in the `@refs' array, whereas
 
      @refs = grep { defined $_ } @refs;
 
@@ -175,24 +185,25 @@ FUNCTIONS
   @vals = weighted_shuffle_by { WEIGHTFUNC } @vals
     Returns the list of values shuffled into a random order. The
     randomisation is not uniform, but weighted by the value returned by the
-    "WEIGHTFUNC". The probabilty of each item being returned first will be
+    `WEIGHTFUNC'. The probabilty of each item being returned first will be
     distributed with the distribution of the weights, and so on recursively
     for the remaining items.
 
   @vals = bundle_by { BLOCKFUNC } $number, @vals
-    Similar to a regular "map" functional, returns a list of the values
-    returned by "BLOCKFUNC". Values from the input list are given to the
-    block function in bundles of $number.
+    Similar to a regular `map' functional, returns a list of the values
+    returned by `BLOCKFUNC'. Values from the input list are given to the
+    block function in bundles of `$number'.
+
+    If given a list of values whose length does not evenly divide by
+    `$number', the final call will be passed fewer elements than the others.
 
 TODO
-    *   XS implementations
-
+    * XS implementations
         These functions are currently all written in pure perl. Some at
         least, may benefit from having XS implementations to speed up their
         logic.
 
-    *   Merge into List::Util or List::MoreUtils
-
+    * Merge into List::Util or List::MoreUtils
         This module shouldn't really exist. The functions should instead be
         part of one of the existing modules that already contain many list
         utility functions. Having Yet Another List Utilty Module just

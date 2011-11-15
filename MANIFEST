@@ -19,6 +19,5 @@ t/08zip_by.t
 t/09extract_by.t
 t/10weighted_shuffle_by.t
 t/11bundle_by.t
-t/98back-compat.t
 t/99pod.t
-t/TestRand.pm
+t/Unrandom.pm

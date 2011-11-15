@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Test::More tests => 4;
-use t::TestRand;
+use t::Unrandom;
 
 use List::UtilsBy qw( weighted_shuffle_by );
 
@@ -16,7 +16,7 @@ my @vals = weighted_shuffle_by { 1 } "a", "b", "c";
 is_deeply( [ sort @vals ], [ "a", "b", "c" ], 'set of return values' );
 
 my %got;
-randomly {
+unrandomly {
    my $order = join "",
                weighted_shuffle_by { { a => 1, b => 2, c => 3 }->{$_} }
                qw( a b c );

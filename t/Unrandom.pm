@@ -1,21 +1,24 @@
-package t::TestRand;
+package t::Unrandom;
 
 use strict;
 use warnings;
 
 use Exporter 'import';
-our @EXPORT = qw( randomly );
+our @EXPORT = qw( unrandomly );
 
-my $randhook;
+our $randhook;
 *CORE::GLOBAL::rand = sub { $randhook ? $randhook->( $_[0] ) : rand $_[0] };
 
-sub randomly(&)
+use constant VALUE => 0;
+use constant BELOW => 1;
+
+sub unrandomly(&)
 {
    my $code = shift;
 
    my @rands;
    my $randidx;
-   $randhook = sub {
+   local $randhook = sub {
       my ( $below ) = @_;
       if( $randidx > $#rands ) {
          push @rands, [ 0, $below ];
@@ -23,28 +26,28 @@ sub randomly(&)
          return 0;
       }
 
-      if( $below != $rands[$randidx][1] ) {
+      if( $below != $rands[$randidx][BELOW] ) {
          die "ARGH! The function under test is nondeterministic!\n";
       }
 
-      if( $randidx < $#rands and $rands[$randidx+1][0] == $rands[$randidx+1][1]-1 ) {
-         die "Fell off the edge" if $rands[$randidx][0] == $rands[$randidx][1]-1;
+      if( $randidx < $#rands and $rands[$randidx+1][VALUE] == $rands[$randidx+1][BELOW]-1 ) {
+         die "Fell off the edge" if $rands[$randidx][VALUE] == $rands[$randidx][BELOW]-1;
          splice @rands, $randidx+1, @rands-$randidx, ();
-         $rands[$randidx][0]++;
-         return $rands[$randidx++][0];
+         $rands[$randidx][VALUE]++;
+         return $rands[$randidx++][VALUE];
       } 
       elsif( $randidx == $#rands ) {
-         $rands[$randidx][0]++;
-         return $rands[$randidx++][0];
+         $rands[$randidx][VALUE]++;
+         return $rands[$randidx++][VALUE];
       }
       else {
-         return $rands[$randidx++][0];
+         return $rands[$randidx++][VALUE];
       }
    };
 
    while(1) {
       my $more = 0;
-      $_->[0] < $_->[1]-1 and $more = 1 for @rands;
+      $_->[VALUE] < $_->[BELOW]-1 and $more = 1 for @rands;
       last if @rands and !$more;
 
       $randidx = 0;
