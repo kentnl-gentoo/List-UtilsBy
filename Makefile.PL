@@ -2,14 +2,14 @@
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
-          'NAME' => 'List::UtilsBy',
-          'VERSION_FROM' => 'lib/List/UtilsBy.pm',
-          'PREREQ_PM' => {
-                           'Exporter' => '5.57',
-                           'Test::More' => 0
-                         },
-          'INSTALLDIRS' => 'site',
-          'EXE_FILES' => [],
-          'PL_FILES' => {}
-        )
+  'NAME' => 'List::UtilsBy',
+  'VERSION_FROM' => 'lib/List/UtilsBy.pm',
+  'PREREQ_PM' => {
+                   'Exporter' => '5.57',
+                   'Test::More' => 0
+                 },
+  'INSTALLDIRS' => 'site',
+  'EXE_FILES' => [],
+  'PL_FILES' => {}
+)
 ;

@@ -82,10 +82,13 @@ FUNCTIONS
 
     If called on an empty list, an empty list is returned.
 
+    For symmetry with the `nsort_by' function, this is also provided under
+    the name `nmax_by' since it behaves numerically.
+
   $optimal = min_by { KEYFUNC } @vals
   @optimal = min_by { KEYFUNC } @vals
     Similar to `max_by' but returns values which give the numerically
-    smallest result from the key function.
+    smallest result from the key function. Also provided as `nmin_by'
 
   @vals = uniq_by { KEYFUNC } @vals
     Returns a list of the subset of values for which the key function block
@@ -154,6 +157,23 @@ FUNCTIONS
     (A function having this behaviour is sometimes called `zipWith', e.g. in
     Haskell, but that name would not fit the naming scheme used by this
     module).
+
+  $arr0, $arr1, $arr2, ... = unzip_by { ITEMFUNC } @vals
+    Returns a list of ARRAY references containing the values returned by the
+    function block, when invoked for each of the values given in the input
+    list. Each of the returned ARRAY references will contain the values
+    returned at that corresponding position by the function block. That is,
+    the first returned ARRAY reference will contain all the values returned
+    in the first position by the function block, the second will contain all
+    the values from the second position, and so on.
+
+     my ( $firstnames, $lastnames ) = unzip_by { m/^(.*?) (.*)$/ } @names;
+
+    If the function returns lists of differing lengths, the result will be
+    padded with `undef' in the missing elements.
+
+    This function is an inverse of `zip_by', if given a corresponding
+    inverse function.
 
   @vals = extract_by { SELECTFUNC } @arr
     Removes elements from the referenced array on which the selection

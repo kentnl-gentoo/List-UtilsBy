@@ -1,14 +1,14 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2009-2011 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2009-2012 -- leonerd@leonerd.org.uk
 
 package List::UtilsBy;
 
 use strict;
 use warnings;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use Exporter 'import';
 
@@ -18,8 +18,8 @@ our @EXPORT_OK = qw(
    rev_sort_by
    rev_nsort_by
 
-   max_by
-   min_by
+   max_by nmax_by
+   min_by nmin_by
 
    uniq_by
 
@@ -27,6 +27,7 @@ our @EXPORT_OK = qw(
    count_by
 
    zip_by
+   unzip_by
 
    extract_by
 
@@ -168,6 +169,9 @@ positions other than the first, if order is significant.
 
 If called on an empty list, an empty list is returned.
 
+For symmetry with the C<nsort_by> function, this is also provided under the
+name C<nmax_by> since it behaves numerically.
+
 =cut
 
 sub max_by(&@)
@@ -195,12 +199,14 @@ sub max_by(&@)
    return wantarray ? @maximal : $maximal[0];
 }
 
+*nmax_by = \&max_by;
+
 =head2 $optimal = min_by { KEYFUNC } @vals
 
 =head2 @optimal = min_by { KEYFUNC } @vals
 
 Similar to C<max_by> but returns values which give the numerically smallest
-result from the key function.
+result from the key function. Also provided as C<nmin_by>
 
 =cut
 
@@ -228,6 +234,8 @@ sub min_by(&@)
 
    return wantarray ? @minimal : $minimal[0];
 }
+
+*nmin_by = \&min_by;
 
 =head2 @vals = uniq_by { KEYFUNC } @vals
 
@@ -350,6 +358,40 @@ sub zip_by(&@)
       my $idx = $_;
       $code->( map { $_[$_][$idx] } 0 .. $#_ )
    } 0 .. $len-1;
+}
+
+=head2 $arr0, $arr1, $arr2, ... = unzip_by { ITEMFUNC } @vals
+
+Returns a list of ARRAY references containing the values returned by the
+function block, when invoked for each of the values given in the input list.
+Each of the returned ARRAY references will contain the values returned at that
+corresponding position by the function block. That is, the first returned
+ARRAY reference will contain all the values returned in the first position by
+the function block, the second will contain all the values from the second
+position, and so on.
+
+ my ( $firstnames, $lastnames ) = unzip_by { m/^(.*?) (.*)$/ } @names;
+
+If the function returns lists of differing lengths, the result will be padded
+with C<undef> in the missing elements.
+
+This function is an inverse of C<zip_by>, if given a corresponding inverse
+function.
+
+=cut
+
+sub unzip_by(&@)
+{
+   my $code = shift;
+
+   my @ret;
+   foreach my $idx ( 0 .. $#_ ) {
+      my @slice = $code->( local $_ = $_[$idx] );
+      $#slice = $#ret if @slice < @ret;
+      $ret[$_][$idx] = $slice[$_] for 0 .. $#slice;
+   }
+
+   return @ret;
 }
 
 =head2 @vals = extract_by { SELECTFUNC } @arr

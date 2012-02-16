@@ -1,5 +1,9 @@
 Revision history for List-UtilsBy
 
+0.09    CHANGES:
+         * Added 'unzip_by'
+         * Added 'nmax_by' and 'nmin_by' name aliases for 'max_by'/'min_by'
+
 0.08    CHANGES:
          * Ensure that 'bundle_by' passes a short list to the body function
            rather than trailing undefs
