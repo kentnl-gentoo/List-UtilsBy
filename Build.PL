@@ -8,10 +8,12 @@ my $build = Module::Build->new(
    requires => {
       'Exporter' => '5.57',
    },
-   build_requires => {
-      'Test::More' => 0,
+   test_requires => {
+      'Test::More' => '0.88', # done_testing
    },
-   auto_configure_requires => 0, # Don't add M::B to configure_requires
+   configure_requires => {
+      'Module::Build' => '0.4004', # test_requires
+   },
    license => 'perl',
    create_makefile_pl => 'traditional',
    create_license => 1,

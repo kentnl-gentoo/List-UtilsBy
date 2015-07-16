@@ -1,14 +1,14 @@
 #  You may distribute under the terms of either the GNU General Public License
 #  or the Artistic License (the same terms as Perl itself)
 #
-#  (C) Paul Evans, 2009-2012 -- leonerd@leonerd.org.uk
+#  (C) Paul Evans, 2009-2015 -- leonerd@leonerd.org.uk
 
 package List::UtilsBy;
 
 use strict;
 use warnings;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 use Exporter 'import';
 
@@ -30,6 +30,7 @@ our @EXPORT_OK = qw(
    unzip_by
 
    extract_by
+   extract_first_by
 
    weighted_shuffle_by
 
@@ -67,9 +68,14 @@ the extra function, when given each value.
 
 =head1 FUNCTIONS
 
+All functions added since version 0.04 unless otherwise stated, as the
+original names for earlier versions were renamed.
+
 =cut
 
-=head2 @vals = sort_by { KEYFUNC } @vals
+=head2 sort_by
+
+   @vals = sort_by { KEYFUNC } @vals
 
 Returns the list of values sorted according to the string values returned by
 the C<KEYFUNC> block or function. A typical use of this may be to sort objects
@@ -107,7 +113,9 @@ sub sort_by(&@)
    return @_[ sort { $keys[$a] cmp $keys[$b] } 0 .. $#_ ];
 }
 
-=head2 @vals = nsort_by { KEYFUNC } @vals
+=head2 nsort_by
+
+   @vals = nsort_by { KEYFUNC } @vals
 
 Similar to C<sort_by> but compares its key values numerically.
 
@@ -121,9 +129,15 @@ sub nsort_by(&@)
    return @_[ sort { $keys[$a] <=> $keys[$b] } 0 .. $#_ ];
 }
 
-=head2 @vals = rev_sort_by { KEYFUNC } @vals
+=head2 rev_sort_by
 
-=head2 @vals = rev_nsort_by { KEYFUNC } @vals
+=head2 rev_nsort_by
+
+   @vals = rev_sort_by { KEYFUNC } @vals
+
+   @vals = rev_nsort_by { KEYFUNC } @vals
+
+I<Since version 0.06.>
 
 Similar to C<sort_by> and C<nsort_by> but returns the list in the reverse
 order. Equivalent to
@@ -151,9 +165,11 @@ sub rev_nsort_by(&@)
    return @_[ sort { $keys[$b] <=> $keys[$a] } 0 .. $#_ ];
 }
 
-=head2 $optimal = max_by { KEYFUNC } @vals
+=head2 max_by
 
-=head2 @optimal = max_by { KEYFUNC } @vals
+   $optimal = max_by { KEYFUNC } @vals
+
+   @optimal = max_by { KEYFUNC } @vals
 
 Returns the (first) value from C<@vals> that gives the numerically largest
 result from the key function.
@@ -201,9 +217,11 @@ sub max_by(&@)
 
 *nmax_by = \&max_by;
 
-=head2 $optimal = min_by { KEYFUNC } @vals
+=head2 min_by
 
-=head2 @optimal = min_by { KEYFUNC } @vals
+   $optimal = min_by { KEYFUNC } @vals
+
+   @optimal = min_by { KEYFUNC } @vals
 
 Similar to C<max_by> but returns values which give the numerically smallest
 result from the key function. Also provided as C<nmin_by>
@@ -237,7 +255,9 @@ sub min_by(&@)
 
 *nmin_by = \&min_by;
 
-=head2 @vals = uniq_by { KEYFUNC } @vals
+=head2 uniq_by
+
+   @vals = uniq_by { KEYFUNC } @vals
 
 Returns a list of the subset of values for which the key function block
 returns unique values. The first value yielding a particular key is chosen,
@@ -249,6 +269,11 @@ To select instead the last value per key, reverse the input list. If the order
 of the results is significant, don't forget to reverse the result as well:
 
  my @some_fruit = reverse uniq_by { $_->colour } reverse @fruit;
+
+Because the values returned by the key function are used as hash keys, they
+ought to either be strings, or at least well-behaved as strings (such as
+numbers, or object references which overload stringification in a suitable
+manner).
 
 =cut
 
@@ -263,7 +288,9 @@ sub uniq_by(&@)
    } @_;
 }
 
-=head2 %parts = partition_by { KEYFUNC } @vals
+=head2 partition_by
+
+   %parts = partition_by { KEYFUNC } @vals
 
 Returns a key/value list of ARRAY refs containing all the original values
 distributed according to the result of the key function block. Each value will
@@ -289,7 +316,11 @@ sub partition_by(&@)
    return %parts;
 }
 
-=head2 %counts = count_by { KEYFUNC } @vals
+=head2 count_by
+
+   %counts = count_by { KEYFUNC } @vals
+
+I<Since version 0.07.>
 
 Returns a key/value list of integers, giving the number of times the key
 function block returned the key, for each value in the list.
@@ -313,7 +344,9 @@ sub count_by(&@)
    return %counts;
 }
 
-=head2 @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
+=head2 zip_by
+
+   @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
 
 Returns a list of each of the values returned by the function block, when
 invoked with values from across each each of the given ARRAY references. Each
@@ -360,7 +393,11 @@ sub zip_by(&@)
    } 0 .. $len-1;
 }
 
-=head2 $arr0, $arr1, $arr2, ... = unzip_by { ITEMFUNC } @vals
+=head2 unzip_by
+
+   $arr0, $arr1, $arr2, ... = unzip_by { ITEMFUNC } @vals
+
+I<Since version 0.09.>
 
 Returns a list of ARRAY references containing the values returned by the
 function block, when invoked for each of the values given in the input list.
@@ -394,7 +431,11 @@ sub unzip_by(&@)
    return @ret;
 }
 
-=head2 @vals = extract_by { SELECTFUNC } @arr
+=head2 extract_by
+
+   @vals = extract_by { SELECTFUNC } @arr
+
+I<Since version 0.05.>
 
 Removes elements from the referenced array on which the selection function
 returns true, and returns a list containing those elements. This function is
@@ -428,19 +469,56 @@ sub extract_by(&\@)
    my ( $arrref ) = @_;
 
    my @ret;
-   for( my $idx = 0; $idx < scalar @$arrref; ) {
-      if( $code->( local $_ = $arrref->[$idx] ) ) {
-         push @ret, splice @$arrref, $idx, 1, ();
-      }
-      else {
-         $idx++;
-      }
+   for( my $idx = 0; ; $idx++ ) {
+      last if $idx > $#$arrref;
+      next unless $code->( local $_ = $arrref->[$idx] );
+
+      push @ret, splice @$arrref, $idx, 1, ();
+      redo;
    }
 
    return @ret;
 }
 
-=head2 @vals = weighted_shuffle_by { WEIGHTFUNC } @vals
+=head2 extract_first_by
+
+   $val = extract_first_by { SELECTFUNC } @arr
+
+I<Since version 0.10.>
+
+A hybrid between C<extract_by> and C<List::Util::first>. Removes the first
+element from the referenced array on which the selection function returns
+true, returning it.
+
+As with C<extract_by>, this function requires a real array and not just a
+list, and is also implemented using C<splice()> so that weak references are
+not disturbed.
+
+If this function fails to find a matching element, it will return an empty
+list in list context. This allows a caller to distinguish the case between
+no matching element, and the first matching element being C<undef>.
+
+=cut
+
+sub extract_first_by(&\@)
+{
+   my $code = shift;
+   my ( $arrref ) = @_;
+
+   foreach my $idx ( 0 .. $#$arrref ) {
+      next unless $code->( local $_ = $arrref->[$idx] );
+
+      return splice @$arrref, $idx, 1, ();
+   }
+
+   return;
+}
+
+=head2 weighted_shuffle_by
+
+   @vals = weighted_shuffle_by { WEIGHTFUNC } @vals
+
+I<Since version 0.07.>
 
 Returns the list of values shuffled into a random order. The randomisation is
 not uniform, but weighted by the value returned by the C<WEIGHTFUNC>. The
@@ -474,7 +552,11 @@ sub weighted_shuffle_by(&@)
    return @ret;
 }
 
-=head2 @vals = bundle_by { BLOCKFUNC } $number, @vals
+=head2 bundle_by
+
+   @vals = bundle_by { BLOCKFUNC } $number, @vals
+
+I<Since version 0.07.>
 
 Similar to a regular C<map> functional, returns a list of the values returned
 by C<BLOCKFUNC>. Values from the input list are given to the block function in
@@ -517,6 +599,12 @@ I have attempted to contact the authors of both of the above modules, to no
 avail; therefore I decided it best to write and release this code here anyway
 so that it is at least on CPAN. Once there, we can then see how best to merge
 it into an existing module.
+
+I<Updated 2015/07/16>: As I am now the maintainer of L<List::Util>, some
+amount of merging/copying should be possible. However, given the latter's key
+position in the core F<perl> distribution and head of the "CPAN River" I am
+keen not to do this wholesale, but a selected pick of what seems best, by a
+popular consensus.
 
 =back
 

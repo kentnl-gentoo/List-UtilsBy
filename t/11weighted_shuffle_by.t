@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;
+use Test::More;
 use t::Unrandom;
 
 use List::UtilsBy qw( weighted_shuffle_by );
@@ -33,3 +33,5 @@ my %expect = (
 );
 
 is_deeply( \%got, \%expect, 'Got correct distribution of ordering counts' );
+
+done_testing;

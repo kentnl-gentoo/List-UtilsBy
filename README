@@ -24,7 +24,12 @@ DESCRIPTION
      my @people_sorted = sort_by { $_->name } @people;
 
 FUNCTIONS
-  @vals = sort_by { KEYFUNC } @vals
+    All functions added since version 0.04 unless otherwise stated, as the
+    original names for earlier versions were renamed.
+
+  sort_by
+       @vals = sort_by { KEYFUNC } @vals
+
     Returns the list of values sorted according to the string values
     returned by the `KEYFUNC' block or function. A typical use of this may
     be to sort objects according to the string value of some accessor, such
@@ -53,11 +58,19 @@ FUNCTIONS
     numbers to some level (9 digits in this case), helping to ensure the
     lexical sort puts them in the correct order.
 
-  @vals = nsort_by { KEYFUNC } @vals
+  nsort_by
+       @vals = nsort_by { KEYFUNC } @vals
+
     Similar to `sort_by' but compares its key values numerically.
 
-  @vals = rev_sort_by { KEYFUNC } @vals
-  @vals = rev_nsort_by { KEYFUNC } @vals
+  rev_sort_by
+  rev_nsort_by
+       @vals = rev_sort_by { KEYFUNC } @vals
+
+       @vals = rev_nsort_by { KEYFUNC } @vals
+
+    *Since version 0.06.*
+
     Similar to `sort_by' and `nsort_by' but returns the list in the reverse
     order. Equivalent to
 
@@ -66,8 +79,11 @@ FUNCTIONS
     except that these functions are slightly more efficient because they
     avoid the final `reverse' operation.
 
-  $optimal = max_by { KEYFUNC } @vals
-  @optimal = max_by { KEYFUNC } @vals
+  max_by
+       $optimal = max_by { KEYFUNC } @vals
+
+       @optimal = max_by { KEYFUNC } @vals
+
     Returns the (first) value from `@vals' that gives the numerically
     largest result from the key function.
 
@@ -85,12 +101,17 @@ FUNCTIONS
     For symmetry with the `nsort_by' function, this is also provided under
     the name `nmax_by' since it behaves numerically.
 
-  $optimal = min_by { KEYFUNC } @vals
-  @optimal = min_by { KEYFUNC } @vals
+  min_by
+       $optimal = min_by { KEYFUNC } @vals
+
+       @optimal = min_by { KEYFUNC } @vals
+
     Similar to `max_by' but returns values which give the numerically
     smallest result from the key function. Also provided as `nmin_by'
 
-  @vals = uniq_by { KEYFUNC } @vals
+  uniq_by
+       @vals = uniq_by { KEYFUNC } @vals
+
     Returns a list of the subset of values for which the key function block
     returns unique values. The first value yielding a particular key is
     chosen, subsequent values are rejected.
@@ -103,7 +124,14 @@ FUNCTIONS
 
      my @some_fruit = reverse uniq_by { $_->colour } reverse @fruit;
 
-  %parts = partition_by { KEYFUNC } @vals
+    Because the values returned by the key function are used as hash keys,
+    they ought to either be strings, or at least well-behaved as strings
+    (such as numbers, or object references which overload stringification in
+    a suitable manner).
+
+  partition_by
+       %parts = partition_by { KEYFUNC } @vals
+
     Returns a key/value list of ARRAY refs containing all the original
     values distributed according to the result of the key function block.
     Each value will be an ARRAY ref containing all the values which returned
@@ -116,7 +144,11 @@ FUNCTIONS
     (such as numbers, or object references which overload stringification in
     a suitable manner).
 
-  %counts = count_by { KEYFUNC } @vals
+  count_by
+       %counts = count_by { KEYFUNC } @vals
+
+    *Since version 0.07.*
+
     Returns a key/value list of integers, giving the number of times the key
     function block returned the key, for each value in the list.
 
@@ -127,7 +159,9 @@ FUNCTIONS
     (such as numbers, or object references which overload stringification in
     a suitable manner).
 
-  @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
+  zip_by
+       @vals = zip_by { ITEMFUNC } \@arr0, \@arr1, \@arr2,...
+
     Returns a list of each of the values returned by the function block,
     when invoked with values from across each each of the given ARRAY
     references. Each value in the returned list will be the result of the
@@ -158,7 +192,11 @@ FUNCTIONS
     Haskell, but that name would not fit the naming scheme used by this
     module).
 
-  $arr0, $arr1, $arr2, ... = unzip_by { ITEMFUNC } @vals
+  unzip_by
+       $arr0, $arr1, $arr2, ... = unzip_by { ITEMFUNC } @vals
+
+    *Since version 0.09.*
+
     Returns a list of ARRAY references containing the values returned by the
     function block, when invoked for each of the values given in the input
     list. Each of the returned ARRAY references will contain the values
@@ -175,7 +213,11 @@ FUNCTIONS
     This function is an inverse of `zip_by', if given a corresponding
     inverse function.
 
-  @vals = extract_by { SELECTFUNC } @arr
+  extract_by
+       @vals = extract_by { SELECTFUNC } @arr
+
+    *Since version 0.05.*
+
     Removes elements from the referenced array on which the selection
     function returns true, and returns a list containing those elements.
     This function is similar to `grep', except that it modifies the
@@ -202,14 +244,40 @@ FUNCTIONS
 
     will strengthen them all again.
 
-  @vals = weighted_shuffle_by { WEIGHTFUNC } @vals
+  extract_first_by
+       $val = extract_first_by { SELECTFUNC } @arr
+
+    *Since version 0.10.*
+
+    A hybrid between `extract_by' and `List::Util::first'. Removes the first
+    element from the referenced array on which the selection function
+    returns true, returning it.
+
+    As with `extract_by', this function requires a real array and not just a
+    list, and is also implemented using `splice()' so that weak references
+    are not disturbed.
+
+    If this function fails to find a matching element, it will return an
+    empty list in list context. This allows a caller to distinguish the case
+    between no matching element, and the first matching element being
+    `undef'.
+
+  weighted_shuffle_by
+       @vals = weighted_shuffle_by { WEIGHTFUNC } @vals
+
+    *Since version 0.07.*
+
     Returns the list of values shuffled into a random order. The
     randomisation is not uniform, but weighted by the value returned by the
     `WEIGHTFUNC'. The probabilty of each item being returned first will be
     distributed with the distribution of the weights, and so on recursively
     for the remaining items.
 
-  @vals = bundle_by { BLOCKFUNC } $number, @vals
+  bundle_by
+       @vals = bundle_by { BLOCKFUNC } $number, @vals
+
+    *Since version 0.07.*
+
     Similar to a regular `map' functional, returns a list of the values
     returned by `BLOCKFUNC'. Values from the input list are given to the
     block function in bundles of `$number'.
@@ -233,6 +301,12 @@ TODO
         modules, to no avail; therefore I decided it best to write and
         release this code here anyway so that it is at least on CPAN. Once
         there, we can then see how best to merge it into an existing module.
+
+        *Updated 2015/07/16*: As I am now the maintainer of List::Util, some
+        amount of merging/copying should be possible. However, given the
+        latter's key position in the core perl distribution and head of the
+        "CPAN River" I am keen not to do this wholesale, but a selected pick
+        of what seems best, by a popular consensus.
 
 AUTHOR
     Paul Evans <leonerd@leonerd.org.uk>

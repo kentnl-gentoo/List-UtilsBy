@@ -1,5 +1,12 @@
 Revision history for List-UtilsBy
 
+0.10    2015/07/16 19:22:00
+        [CHANGES]
+         * Added 'extract_first_by'
+         * Updated documentation:
+            + Added 'since' version to all functions
+            + Use =head2 barename for nicer indexing
+
 0.09    CHANGES:
          * Added 'unzip_by'
          * Added 'nmax_by' and 'nmin_by' name aliases for 'max_by'/'min_by'

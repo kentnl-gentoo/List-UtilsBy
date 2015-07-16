@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More;
 
 use List::UtilsBy qw( max_by nmax_by );
 
@@ -21,3 +21,5 @@ is_deeply( ( scalar max_by { length $_ } "a", "ccc", "bb", "ddd" ), "ccc", 'ties
 is_deeply( [ max_by { length $_ } "a", "ccc", "bb", "ddd" ], [ "ccc", "ddd" ], 'ties yield all maximal in list context' );
 
 is_deeply( ( scalar nmax_by { $_ } 10, 20 ), 20, 'nmax_by alias' );
+
+done_testing;

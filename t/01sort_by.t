@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More;
 
 use List::UtilsBy qw( sort_by rev_sort_by );
 
@@ -23,3 +23,5 @@ is_deeply( [ sort_by { $_[0] } "b", "a" ], [ "a", "b" ], 'identity function on $
 is_deeply( [ sort_by { reverse $_ } "az", "by" ], [ "by", "az" ], 'reverse function' );
 
 is_deeply( [ rev_sort_by { $_ } "b", "a" ], [ "b", "a" ], 'reverse sort identity function on $_' );
+
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More;
 
 use List::UtilsBy qw( partition_by );
 
@@ -20,3 +20,5 @@ is_deeply( { partition_by { $_[0] } "b", "a" }, { a => [ "a" ], b => [ "b" ] }, 
 
 is_deeply( { partition_by { length $_ } "a", "b", "cc", "dd", "eee" },
            { 1 => [ "a", "b" ], 2 => [ "cc", "dd" ], 3 => [ "eee" ] }, 'length function' );
+
+done_testing;

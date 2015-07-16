@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More;
 
 use List::UtilsBy qw( nsort_by rev_nsort_by );
 
@@ -25,3 +25,5 @@ is_deeply( [ nsort_by { length $_ } "a", "bbb", "cc" ], [ "a", "cc", "bbb" ], 'l
 is_deeply( [ nsort_by { () = m/(a)/g } "apple", "hello", "armageddon" ], [ "hello", "apple", "armageddon" ], 'scalar context' );
 
 is_deeply( [ rev_nsort_by { length $_ } "a", "bbb", "cc" ], [ "bbb", "cc", "a" ], 'reverse sort length function' );
+
+done_testing;

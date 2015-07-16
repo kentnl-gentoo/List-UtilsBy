@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More;
 
 use List::UtilsBy qw( count_by );
 
@@ -18,3 +18,4 @@ is_deeply( { count_by { $_[0] } "b", "a" }, { a => 1, b => 1 }, 'identity functi
 is_deeply( { count_by { length $_ } "a", "b", "cc", "dd", "eee" },
            { 1 => 2, 2 => 2, 3 => 1 }, 'length function' );
 
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More;
 
 use List::UtilsBy qw( min_by nmin_by );
 
@@ -21,3 +21,5 @@ is_deeply( ( scalar min_by { length $_ } "a", "ccc", "bb", "e" ), "a", 'ties yie
 is_deeply( [ min_by { length $_ } "a", "ccc", "bb", "ddd", "e" ], [ "a", "e" ], 'ties yield all minimal in list context' );
 
 is_deeply( ( scalar nmin_by { $_ } 10, 20 ), 10, 'nmin_by alias' );
+
+done_testing;
